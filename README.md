@@ -159,7 +159,7 @@ The icon files come from the game, so they are only in the release zips, not in 
 
 ## Contributors
 
-- [exgde](https://github.com/exgde): the mod, the tools and the settings program.
+- [joaobyss](https://github.com/joaobyss): the mod, the tools and the settings program.
 - [igormoraesraphael0403-arch](https://github.com/igormoraesraphael0403-arch): ideas for the Native camera in 1.4.3 (bigger clock-hand jumps, `mouse_step`, the helper log), from [pull request #4](https://github.com/exgde/oot-lichii-keyboard-mouse/pull/4).
 
 ## License
