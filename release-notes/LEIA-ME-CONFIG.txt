@@ -31,6 +31,9 @@ MODOS DA CÂMERA
 ---------------
   As the stick: o mouse imita o analógico direito, com a curva e a velocidade máxima do jogo.
   Native:       o mouse gira a câmera direto, 1 para 1, como num jogo de PC.
+                EXPERIMENTAL: pode ter bugs (a câmera trava ou engasga, tela preta
+                depois de carregar em alguns PCs). Qualquer problema: escolha
+                "As the stick" (o padrão) e clique em Apply.
                 Antes de jogar, abra o OoT-MouseCapture.exe (na pasta de dados do Lichii) e deixe aberto.
                 Alt+Tab ou fechar ele devolve o mouse normal.
 

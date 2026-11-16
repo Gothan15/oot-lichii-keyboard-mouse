@@ -26,8 +26,8 @@ static void hand(int hx, int hy, int err) {
     for (int s = 1; s <= steps; s++) {
         x += hx * s / steps - hx * (s - 1) / steps;
         y += hy * s / steps - hy * (s - 1) / steps;
-        if (x - 640 > 256) x -= 512 + err; else if (640 - x > 256) x += 512 + err;
-        if (y - 360 > 192) y -= 384 + err; else if (360 - y > 192) y += 384 + err;
+        if (x - 640 > 512) x -= 1024 + err; else if (640 - x > 512) x += 1024 + err;
+        if (y - 360 > 288) y -= 576 + err; else if (360 - y > 288) y += 576 + err;
     }
     sample(x, y);
 }
@@ -38,7 +38,7 @@ int main(void) {
     hand(4, 2, 0); hand(3, 1, 0); hand(3, 2, 0);
     frame(&y, &p); CHECK(NEAR(y, -10 * K) && NEAR(p, 5 * K), "slow move: yaw %f pitch %f", y, p);
     frame(&y, &p); CHECK(NEAR(y, 0) && NEAR(p, 0), "idle");
-    for (int speed = 20; speed <= 240; speed += 55) {
+    for (int speed = 20; speed <= 500; speed += 60) {
         for (int err = -1; err <= 1; err++) {
             float total = 0; int hand_total = 0, backwards = 0;
             for (int f = 0; f < 60; f++) {

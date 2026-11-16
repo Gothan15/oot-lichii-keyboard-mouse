@@ -5,7 +5,7 @@ Play *OOT* (Nintendo Switch 2) on **Lichii**, or any Lichii fork, with a **keybo
 - **W A S D** move the green hat kid, the **mouse** turns the camera, **left click** attacks.
 - The game itself shows **keyboard and mouse icons** instead of controller buttons: on screen, in the menus, on the ocarina song sheet and on the "Basic Controls" screen.
 - **Change any key and the mouse speed**, with a small program (clicks) or a text file (Notepad).
-- **Two camera modes:** *As the stick* (the mouse acts like the right stick) or *Native* (the mouse turns the camera itself, 1:1, like a PC game).
+- **Two camera modes:** *As the stick* (default: the mouse acts like the right stick) or *Native* (**experimental**: the mouse turns the camera itself, 1:1, like a PC game).
 
 > **[⬇ Download from the latest release](../../releases/latest)** (scroll down to **Assets**)
 
@@ -17,8 +17,8 @@ Pick **one** of the two:
 
 | File | Who it is for |
 |---|---|
-| **`OoT-KeyboardMouse-Config-v1.4.2.zip`** | **Most people.** A small program: you click the keys you want and press **Apply**. It installs everything for you, and when you change a key it also redraws the key icons inside the game. |
-| **`OoT-KeyboardMouse-v1.4.2.zip`** | People who prefer no program. A one-click installer (`INSTALL.bat`); keys and mouse are changed in a text file. |
+| **`OoT-KeyboardMouse-Config-v1.4.3.zip`** | **Most people.** A small program: you click the keys you want and press **Apply**. It installs everything for you, and when you change a key it also redraws the key icons inside the game. |
+| **`OoT-KeyboardMouse-v1.4.3.zip`** | People who prefer no program. A one-click installer (`INSTALL.bat`); keys and mouse are changed in a text file. |
 
 **You need:** Windows, and Lichii (or a fork such as Fritchii) with OOT for Switch 2, version 2.0.0, already working (`[0400486024dec000][v131072]`).
 
@@ -28,7 +28,7 @@ Pick **one** of the two:
 
 ### With the program (recommended)
 
-1. Download **`OoT-KeyboardMouse-Config-v1.4.2.zip`**.
+1. Download **`OoT-KeyboardMouse-Config-v1.4.3.zip`**.
 2. **Extract it:** right-click the zip → **Extract All…** → **Extract**.
 3. **Close Lichii** completely.
 4. Double-click **`OoT-KeyboardMouse-Config.exe`**.
@@ -40,7 +40,7 @@ Pick **one** of the two:
 
 ### Without the program (manual)
 
-1. Download **`OoT-KeyboardMouse-v1.4.2.zip`**.
+1. Download **`OoT-KeyboardMouse-v1.4.3.zip`**.
 2. **Extract it:** right-click the zip → **Extract All…** → **Extract**.
 3. **Close Lichii** completely.
 4. In the extracted folder, double-click **`INSTALL.bat`**. A black window finds Lichii's data folder, copies everything and sets up the keyboard and mouse. It ends with **"Done"**.
@@ -108,7 +108,10 @@ Both ways read and write the **same** settings file, so you can switch between t
 | Mode | What it feels like |
 |---|---|
 | **As the stick** (default) | The mouse stands in for the right stick: the camera keeps the game's own curve and top speed. |
-| **Native** | The mouse turns the camera itself, **1:1**, like a PC game: the same hand movement always gives the same turn, slow or fast, at any frame rate. Needs `OoT-MouseCapture.exe` open while you play. |
+| **Native** ⚠️ **EXPERIMENTAL** | The mouse turns the camera itself, **1:1**, like a PC game: the same hand movement always gives the same turn, slow or fast, at any frame rate. Needs `OoT-MouseCapture.exe` open while you play. |
+
+> [!WARNING]
+> **The Native camera is EXPERIMENTAL and may have bugs:** the camera can stop or stutter, and on some PCs the screen stays black after the game loads. If you have any problem, switch back to **As the stick** (the default) and play with that.
 
 How Native works (a small patch in the game and a mouse helper): [docs/NATIVE-CAMERA.md](docs/NATIVE-CAMERA.md).
 
@@ -119,7 +122,7 @@ How Native works (a small patch in the game and a mouse helper): [docs/NATIVE-CA
 | Problem | Fix |
 |---|---|
 | "Lichii is open" | Close Lichii completely (check the taskbar) and try again. |
-| "Cannot bind argument to parameter 'Path'" | A bug of version 1.3. Download version 1.4.2 and install again (your settings are kept). |
+| "Cannot bind argument to parameter 'Path'" | A bug of version 1.3. Download version 1.4.3 and install again (your settings are kept). |
 | The mouse does not turn the camera | Click the game picture and press **Ctrl+F9** once. In Native mode, check that `OoT-MouseCapture.exe` is open. |
 | Still Switch or PlayStation buttons on screen | Restart the game. Only one button-icon mod can be active; the installers move the others to the `mod-backups` folder. |
 | I want my gamepad back / remove the mod | Close Lichii, open the settings program and click **Undo mod changes...**: Player 1 and the mouse settings go back to what they were before the mod, and the mod is removed (your other Lichii settings stay). No program? See [Uninstall](docs/INSTALLATION.md#uninstall). |

@@ -31,6 +31,9 @@ CAMERA MODES
 ------------
   As the stick: the mouse stands in for the right stick, with the game's own curve and top speed.
   Native:       the mouse turns the camera itself, 1:1, like a PC game.
+                EXPERIMENTAL: it may have bugs (camera stops or stutters, black
+                screen after loading on some PCs). Any problem: choose
+                "As the stick" (the default) and click Apply.
                 Before playing, open OoT-MouseCapture.exe (in Lichii's data folder) and leave it open.
                 Alt+Tab or closing it gives the normal mouse back.
 

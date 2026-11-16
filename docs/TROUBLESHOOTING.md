@@ -26,7 +26,9 @@
 
 **Native camera: the camera does not turn.** Check that `OoT-MouseCapture.exe` is open (it says "Game found"), click the game picture and press Ctrl+F9 once. `Apply-Settings.bat` must have printed `game patch : ON`; if it says the patch is missing, run `INSTALL.bat` again.
 
-**Native camera: the camera stops or stutters, as if the mouse hit an invisible wall.** Use version 1.4.2 or newer of `OoT-MouseCapture.exe` (install again). Older helpers let go of the pointer when a fast move (or a busy PC) carried it out of the game picture, mostly with Lichii in a window, and the camera then stayed stuck at the edge until the mouse came back. Keep the helper's window open while you play: once you click the picture it must say *Active: the mouse turns the camera*. If it never says *Game found*, the helper does not see the game window: tell us the emulator's name and window title.
+**Native camera: the camera stops or stutters, as if the mouse hit an invisible wall.** The Native camera is experimental: if this keeps happening, choose *As the stick* (the default) and play with that. Use version 1.4.2 or newer of `OoT-MouseCapture.exe` (install again). Older helpers let go of the pointer when a fast move (or a busy PC) carried it out of the game picture, mostly with Lichii in a window, and the camera then stayed stuck at the edge until the mouse came back. Keep the helper's window open while you play: once you click the picture it must say *Active: the mouse turns the camera*. If it never says *Game found*, the helper does not see the game window: tell us the emulator's name and window title.
+
+**Native camera: the camera still stops on fast turns.** Set `mouse_step = 0.25` in `OoT-Keyboard-Mouse-Settings.ini`, run `Apply-Settings.bat`, restart `OoT-MouseCapture.exe` (the camera speed stays the same). If it still happens, send `OoT-MouseCapture-log.txt` (next to `OoT-MouseCapture.exe`) with the report.
 
 **Native camera: the pointer stays visible.** Press Ctrl+F9 once with the game in front (Lichii hides the pointer; `OoT-MouseCapture` never does).
 

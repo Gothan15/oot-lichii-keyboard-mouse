@@ -7,7 +7,7 @@ Installing takes about 2 minutes: 3 steps, then play.
 STEP 1 - EXTRACT THE ZIP
 ------------------------
   Right-click the .zip file > "Extract All..." > "Extract".
-  A folder named OoT-KeyboardMouse-v1.4.2 opens, with INSTALL.bat in it.
+  A folder named OoT-KeyboardMouse-v1.4.3 opens, with INSTALL.bat in it.
 
   Do not run anything from inside the zip window. Extract first.
 
@@ -48,7 +48,9 @@ TO PLAY (every time you open the game)
   If the pointer comes back, press it again. Alt+Tab gives the normal mouse back.
 
 
-"NATIVE" CAMERA (optional)
+"NATIVE" CAMERA (optional, EXPERIMENTAL)
+  WARNING: experimental, it may have bugs (camera stops or stutters, black screen after
+  loading on some PCs). Any problem: set mouse_camera = stick again (the default).
 --------------------------
   By default the mouse stands in for the right stick (mouse_camera = stick): the camera keeps the
   game's curve and top speed. In "native" mode the mouse turns the camera itself, 1:1, like a PC

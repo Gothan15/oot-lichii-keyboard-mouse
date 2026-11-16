@@ -45,8 +45,11 @@ DEFAULTS = {
     'button_home': 'none', 'button_screenshot': 'none', 'move_up': 'w', 'move_down': 's', 'move_left': 'a',
     'move_right': 'd', 'walk_key': 'z', 'walk_speed': '0.5', 'mouse_sens': '5.0', 'mouse_sens_x': '', 'mouse_sens_y': '',
     'mouse_invert_y': 'false', 'mouse_camera': 'stick', 'mouse_deadzone_boost': '20', 'mouse_stop_speed': '18',
-    'mouse_min_decay': '6', 'hide_cursor': 'true',
+    'mouse_min_decay': '6', 'hide_cursor': 'true', 'mouse_step': '0.5',
 }
+EXPERIMENTAL_NOTE = ('WARNING: the Native camera is EXPERIMENTAL and may have bugs: the camera can stop or '
+                     'stutter, and on some PCs the screen stays black after the game loads. If you have any problem, '
+                     'choose "As the stick" (the default), click Apply and play with that.')
 ICON_KEYS = ['button_a', 'button_b', 'button_x', 'button_y', 'button_l', 'button_r', 'button_zl', 'button_zr',
              'button_r3', 'button_plus', 'button_minus', 'dpad_up', 'dpad_left', 'dpad_right', 'dpad_down',
              'move_up', 'move_down', 'move_left', 'move_right']
@@ -466,11 +469,16 @@ class App:
         self.vars['mouse_camera'] = tk.StringVar(value='stick')
         cam = ttk.LabelFrame(f, text='How the mouse turns the camera', padding=8)
         cam.grid(row=0, column=0, columnspan=3, sticky='ew')
-        ttk.Radiobutton(cam, text='As the stick: the mouse stands in for the right stick (the game\'s curve and top speed)',
+        ttk.Style().configure('Exp.TRadiobutton', foreground='#b00000', font=('Segoe UI', 9, 'bold'))
+        ttk.Radiobutton(cam, text='As the stick (default, recommended): the mouse stands in for the right stick '
+                                  '(the game\'s curve and top speed)',
                         variable=self.vars['mouse_camera'], value='stick', command=self.check).pack(anchor='w')
-        ttk.Radiobutton(cam, text='Native: the mouse turns the camera itself, 1:1, like a PC game '
-                                  '(open OoT-MouseCapture.exe before playing)',
+        ttk.Radiobutton(cam, text='Native  -  EXPERIMENTAL: the mouse turns the camera itself, 1:1, like a PC game '
+                                  '(open OoT-MouseCapture.exe before playing)', style='Exp.TRadiobutton',
                         variable=self.vars['mouse_camera'], value='native', command=self.check).pack(anchor='w')
+        tk.Label(cam, text=EXPERIMENTAL_NOTE, background='#fff1c2', foreground='#8a1c00', font=('Segoe UI', 9, 'bold'),
+                 justify='left', anchor='w', wraplength=560, padx=8, pady=6, relief='solid', borderwidth=1).pack(
+            fill='x', pady=(6, 0))
         for n, d in (('mouse_sens', 5.0), ('mouse_sens_x', 5.0), ('mouse_sens_y', 5.0)):
             self.vars[n] = tk.DoubleVar(value=d)
         self.scale(f, 'mouse_sens', 0.1, 10.0, 1, 'Camera speed (1 slow ... 10 fast)')
@@ -501,8 +509,8 @@ class App:
         v = {}
         for n in DEFAULTS:
             var = self.vars.get(n)
-            if var is None:
-                v[n] = DEFAULTS[n]
+            if var is None:   # no control in the window: keep what the settings file has
+                v[n] = getattr(self, 'loaded', {}).get(n, DEFAULTS[n])
             elif isinstance(var, tk.BooleanVar):
                 v[n] = 'true' if var.get() else 'false'
             elif isinstance(var, tk.DoubleVar):
@@ -514,6 +522,7 @@ class App:
         return v
 
     def set_values(self, vals):
+        self.loaded = dict(vals)
         for n, val in vals.items():
             var = self.vars.get(n)
             if var is None:
@@ -562,6 +571,9 @@ class App:
             seen[k] = n
             if k in ('ctrl', 'alt', 'esc'):
                 msgs.append('"%s" clashes with Lichii (Ctrl+Q quits, Ctrl+F9 mouse panning, Alt menu bar, Esc fullscreen).' % k)
+        if v['mouse_camera'] == 'native':
+            msgs.insert(0, 'Native camera is EXPERIMENTAL and may have bugs. If anything goes wrong, choose '
+                           '"As the stick" (Mouse and camera tab) and click Apply.')
         if any(v[n] != DEFAULTS[n] for n in ICON_KEYS):
             msgs.append('Keys changed: on Apply the in-game key icons are redrawn for them (needs the game\'s .nup once).')
         self.warn.configure(text='\n'.join(msgs))
@@ -648,6 +660,10 @@ class App:
                and not re.match(r'^code:\d{1,10}$', vals[n])]
         if bad:
             messagebox.showerror(APP, 'Not a key name: %s' % ', '.join(bad))
+            return
+        if vals['mouse_camera'] == 'native' and not messagebox.askyesno(
+                APP, 'Native camera is EXPERIMENTAL.\n\n' + EXPERIMENTAL_NOTE + '\n\nApply with the Native camera?',
+                icon='warning'):
             return
         keys = {n: vals[n] for n in ICON_KEYS}
         custom = any(vals[n] != DEFAULTS[n] for n in ICON_KEYS)

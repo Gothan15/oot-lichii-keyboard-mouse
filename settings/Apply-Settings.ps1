@@ -108,7 +108,7 @@ $defaults = [ordered]@{
     'dpad_up' = '1'; 'dpad_left' = '2'; 'dpad_right' = '3'; 'dpad_down' = '4'
     'button_home' = 'none'; 'button_screenshot' = 'none'
     'move_up' = 'w'; 'move_down' = 's'; 'move_left' = 'a'; 'move_right' = 'd'; 'walk_key' = 'z'; 'walk_speed' = '0.5'
-    'mouse_sens' = '5.0'; 'mouse_sens_x' = ''; 'mouse_sens_y' = ''; 'mouse_invert_y' = 'false'; 'mouse_camera' = 'stick'
+    'mouse_sens' = '5.0'; 'mouse_sens_x' = ''; 'mouse_sens_y' = ''; 'mouse_invert_y' = 'false'; 'mouse_camera' = 'stick'; 'mouse_step' = '0.5'
     'mouse_deadzone_boost' = '20'; 'mouse_stop_speed' = '18'; 'mouse_min_decay' = '6'; 'hide_cursor' = 'true'
 }
 
@@ -188,6 +188,7 @@ $invertY = ConvertTo-Bool (Get-Setting 'mouse_invert_y') 'mouse_invert_y'
 $hideCursor = ConvertTo-Bool (Get-Setting 'hide_cursor') 'hide_cursor'
 $camera = ConvertTo-Choice (Get-Setting 'mouse_camera') @('stick', 'native') 'mouse_camera'
 $native = ($camera -eq 'native')
+$mouseStep = ConvertTo-Number (Get-Setting 'mouse_step') 0.125 1.0 'mouse_step' $false
 
 if ($errors.Count -gt 0) {
     Fail (@("The settings file has $($errors.Count) problem(s). Nothing was changed.") + @($errors))
@@ -282,6 +283,9 @@ $ipsOff = $ipsPath + '.off'
 # step of the mouse is one pixel of the game's 1280x720 picture, so this is degrees per mouse count.
 # mouse_sens 5 = 0.06 degrees: about 15 cm of mouse for a full turn at 1600 DPI.
 function Get-NativeDegrees([double]$scale) { return $scale * 0.012 }
+# OoT-MouseCapture makes one mouse count worth mouse_step pixels (0.5 by default: more room for fast turns), so the
+# patch gets degrees per pixel = degrees per count / mouse_step, and the camera speed stays the same.
+function Get-PatchDegrees([double]$scale) { return (Get-NativeDegrees $scale) / $mouseStep }
 $profilePath = Join-Path $Root ('config\input\' + $profileName + '.ini')
 $utf8 = New-Object System.Text.UTF8Encoding($false)
 
@@ -360,8 +364,8 @@ if ($native) {
         if ($ok) { $at = $i + 8; break }
     }
     if ($at -lt 0) { Fail @("The game patch has no settings block (OOTMCAM1): $src", 'Download the mod again.') }
-    $yaw = [single](Get-NativeDegrees $sensX)
-    $pitch = [single](Get-NativeDegrees $sensY)
+    $yaw = [single](Get-PatchDegrees $sensX)
+    $pitch = [single](Get-PatchDegrees $sensY)
     if ($invertY) { $pitch = [single](-$pitch) }   # keep it a 4-byte float for GetBytes
     [Array]::Copy([BitConverter]::GetBytes($yaw), 0, $bytes, $at, 4)
     [Array]::Copy([BitConverter]::GetBytes($pitch), 0, $bytes, $at + 4, 4)
@@ -385,6 +389,7 @@ Write-Host ('    camera speed x/y   = {0} / {1}  (Lichii values {2} / {3})' -f (
 Write-Host ('    invert up/down     = {0}' -f $invertY)
 Write-Host ('    mouse camera       = {0}' -f $camera)
 if ($native) { Write-Host ([string]::Format($inv, '    native speed x/y   = {0:F3} / {1:F3} degrees per mouse step', (Get-NativeDegrees $sensX), (Get-NativeDegrees $sensY))) }
+if ($native) { Write-Host ([string]::Format($inv, '    mouse step         = {0} game pixel per mouse count', $mouseStep)) }
 Write-Host ('    deadzone boost {0}, stop speed {1}, minimum decay {2}, hide cursor {3}' -f [int]$deadzone, [int]$stopSpeed, [int]$minDecay, $hideCursor)
 
 foreach ($w in $warnings) { Write-Host ('  WARNING: ' + $w) -ForegroundColor Yellow }
@@ -397,6 +402,7 @@ if ($changed.Count -gt 0) {
 }
 Write-Host ''
 if ($native) {
+    Write-Host '  NATIVE CAMERA IS EXPERIMENTAL: it may have bugs. Any problem: set mouse_camera = stick and run this again.' -ForegroundColor Yellow
     Write-Host '  Done. Each time you play:' -ForegroundColor Green
     Write-Host '    1. Start OoT-MouseCapture.exe (it can stay open).' -ForegroundColor Green
     Write-Host '    2. Start the game in Lichii, click the picture once, press Ctrl+F9 once (the pointer disappears).' -ForegroundColor Green

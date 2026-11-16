@@ -97,13 +97,16 @@ The icons drawn in the game (the keys shown in the interface) are pictures of th
 
 ## Native camera
 
+> [!WARNING]
+> **The Native camera is EXPERIMENTAL and may have bugs:** the camera can stop or stutter, and on some PCs the screen stays black after the game loads. If you have any problem, switch back to **As the stick** (the default) and play with that.
+
 With `mouse_camera = native`, `Apply-Settings.bat`:
 
 - switches on the game patch `load\0400486024DEC000\MouseCamera-Native\exefs\E0F3CCFAF50065AE4EA01EB5AEB13B1A45DA3348.ips` (with `stick` it is renamed to `.ips.off`), and writes your speed into it;
 - sets Lichii's `mouse_enabled = true`, so the game receives the real mouse;
 - unbinds the right stick for Player 1 (with `mouse_enabled`, Lichii turns "mouse moved while a button is held" into right-stick input, so attacking would move the camera).
 
-Speed: `mouse_sens` × 0.012 degrees per mouse count (`5.0` = 0.06°, about 15 cm of mouse for a full turn at 1600 DPI). `OoT-MouseCapture.exe` sets the Windows pointer speed so that one mouse count is one pixel of the game's 1280×720 picture, so this holds at any window size. The `mouse_deadzone_boost`, `mouse_stop_speed` and `mouse_min_decay` values only apply to `stick`.
+Speed: `mouse_sens` × 0.012 degrees per mouse count (`5.0` = 0.06°, about 15 cm of mouse for a full turn at 1600 DPI). `OoT-MouseCapture.exe` sets the Windows pointer speed so that one mouse count is `mouse_step` pixels of the game's 1280×720 picture (default `0.5`), and `Apply-Settings` scales the patch to match, so this holds at any window size. `mouse_step` (0.125 ... 1.0) only changes how much room the camera has for fast turns, not its speed: lower it (`0.25`) if the camera stops or jerks on fast turns, and restart `OoT-MouseCapture.exe` after changing it. The `mouse_deadzone_boost`, `mouse_stop_speed` and `mouse_min_decay` values only apply to `stick`.
 
 The game still applies its own pitch limits and, when the mouse rests for a while, its usual slow return of the camera behind the green hat kid, exactly as with the stick.
 

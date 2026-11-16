@@ -1,5 +1,8 @@
 # Native camera: how it works
 
+> [!WARNING]
+> **The Native camera is EXPERIMENTAL and may have bugs:** the camera can stop or stutter, and on some PCs the screen stays black after the game loads. If you have any problem, switch back to **As the stick** (the default) and play with that.
+
 With `mouse_camera = native` (or **Native** in the program) the mouse turns the camera **1:1**: the same hand movement always gives the same turn, slow or fast, at any frame rate. With `stick` (the default) the mouse only pretends to be the right stick, so the game's stick curve and top speed apply.
 
 ## Using it
@@ -18,10 +21,11 @@ The game keeps its own limits: how far up and down you can look, and the slow re
 
 **3. `OoT-MouseCapture.exe` keeps the pointer in the picture.** Lichii hands the game the pointer *position*, so on its own the camera would stop at the edge of the window. It starts once the game is in front and the pointer is over the picture, and keeps going until another window comes in front (Alt+Tab). Meanwhile the helper:
 
-- moves the pointer back by exactly 512 (left/right) or 384 (up/down) game pixels whenever it gets half of that from the middle, like a clock hand going from 12 to 1. The patch undoes any jump of exactly that size, so the camera never sees it, however fast the mouse moves;
+- moves the pointer back by exactly 1024 (left/right) or 576 (up/down) game pixels whenever it gets half of that from the middle, like a clock hand going from 12 to 1. The patch undoes any jump of that size, so the camera never sees it. The limit is half of that (512 × 288 pixels) between two position updates of the emulator, normally every 8 ms but much longer on a busy PC;
 - brings the pointer straight back if a very fast move (or a busy PC) got it out of the picture before the helper saw it. Lichii holds the game's mouse at the edge of the picture while the pointer is outside, so letting it stay there would stop the camera as if against an invisible wall;
-- runs at the highest normal priority, so the emulator's busy threads cannot keep its 1 ms loop waiting;
-- turns off Windows *Enhance pointer precision* (mouse acceleration) and sets the pointer speed so that one mouse count is one pixel of the game's 1280×720 picture, which makes the camera follow the hand exactly at any window size.
+- runs at the highest normal priority with a 0.5 ms timer (and opts out of Windows 11's background slow-down), so the emulator's busy threads cannot keep it waiting;
+- turns off Windows *Enhance pointer precision* (mouse acceleration) and sets the pointer speed so that one mouse count is `mouse_step` pixels of the game's 1280×720 picture (half a pixel by default, which doubles the room for fast turns; `Apply-Settings` scales the patch to match), so the camera follows the hand exactly at any window size;
+- writes what it sees to `OoT-MouseCapture-log.txt` next to it: the picture size, the pointer speed, every pause and, every 5 s, its slowest wake-up and the biggest pointer move. Send that file with any report.
 
 To use Lichii's menus with the mouse, Alt+Tab away and back (or close the helper). Its window shows what it is doing (*Game found*, *Active*, *Paused*). It never hides, clips or locks the pointer (Lichii hides it after Ctrl+F9), and it changes nothing permanently: the Windows settings come back as soon as the game loses focus or closes, and if it ever crashes, its next start puts them back.
 

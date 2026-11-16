@@ -19,6 +19,7 @@
 #include <windows.h>
 #include <wchar.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
@@ -105,9 +106,9 @@ static int mc_read_aspect_setting(const wchar_t *ini, int *value) {
 
 static int mc_try_folder(const wchar_t *dir, int *value) {
     wchar_t p[MAX_PATH];
-    swprintf(p, MAX_PATH, L"%s\\config\\custom\\0400486024DEC000.ini", dir);   /* per-game setting first */
+    swprintf(p, MAX_PATH, L"%ls\\config\\custom\\0400486024DEC000.ini", dir);   /* per-game setting first */
     if (mc_read_aspect_setting(p, value)) return 1;
-    swprintf(p, MAX_PATH, L"%s\\config\\qt-config.ini", dir);
+    swprintf(p, MAX_PATH, L"%ls\\config\\qt-config.ini", dir);
     return mc_read_aspect_setting(p, value);
 }
 
@@ -120,14 +121,84 @@ static void mc_load_aspect(void) {
         wchar_t *s = wcsrchr(dir, L'\\');
         if (s) *s = 0;
         ok = mc_try_folder(dir, &v);
-        if (!ok) { swprintf(tmp, MAX_PATH, L"%s\\user", dir); ok = mc_try_folder(tmp, &v); }
+        if (!ok) { swprintf(tmp, MAX_PATH, L"%ls\\user", dir); ok = mc_try_folder(tmp, &v); }
     }
     if (!ok && GetEnvironmentVariableW(L"APPDATA", dir, MAX_PATH)) {
-        swprintf(tmp, MAX_PATH, L"%s\\lichii", dir);
+        swprintf(tmp, MAX_PATH, L"%ls\\lichii", dir);
         ok = mc_try_folder(tmp, &v);
     }
     static const double aspects[] = {9.0 / 16.0, 3.0 / 4.0, 9.0 / 21.0, 10.0 / 16.0, 0.0};
     mc_aspect = (ok && v >= 0 && v <= 4) ? aspects[v] : 9.0 / 16.0;
+}
+
+/* mouse_step in OoT-Keyboard-Mouse-Settings.ini (default 0.5): game pixels per mouse count. Below 1 a fast hand moves
+   the pointer less between two position updates of the emulator, so the game patch can follow it; Apply-Settings
+   raises the degrees per pixel by the same factor, so the camera speed does not change. */
+static double mc_step = 0.5;
+
+static int mc_read_step(const wchar_t *dir) {
+    wchar_t p[MAX_PATH];
+    char line[512];
+    int found = 0;
+    swprintf(p, MAX_PATH, L"%ls\\OoT-Keyboard-Mouse-Settings.ini", dir);
+    FILE *f = _wfopen(p, L"r");
+    if (!f) return 0;
+    while (fgets(line, sizeof(line), f)) {
+        char *s = line, *semi = strchr(line, ';');
+        double v;
+        if (semi) *semi = 0;
+        while (*s == ' ' || *s == '\t') s++;
+        if (strncmp(s, "mouse_step", 10) != 0) continue;
+        s += 10;
+        while (*s == ' ' || *s == '\t') s++;
+        if (*s == '=' && sscanf(s + 1, "%lf", &v) == 1 && v >= 0.125 && v <= 1.0) { mc_step = v; found = 1; }
+    }
+    fclose(f);
+    return found;
+}
+
+static void mc_load_step(void) {
+    wchar_t dir[MAX_PATH], tmp[MAX_PATH];
+    mc_step = 0.5;
+    if (mc_config_dir[0] && mc_read_step(mc_config_dir)) return;
+    if (GetModuleFileNameW(NULL, dir, MAX_PATH)) {
+        wchar_t *s = wcsrchr(dir, L'\\');
+        if (s) *s = 0;
+        if (mc_read_step(dir)) return;
+        swprintf(tmp, MAX_PATH, L"%ls\\user", dir);
+        if (mc_read_step(tmp)) return;
+    }
+    if (GetEnvironmentVariableW(L"APPDATA", dir, MAX_PATH)) {
+        swprintf(tmp, MAX_PATH, L"%ls\\lichii", dir);
+        mc_read_step(tmp);
+    }
+}
+
+/* OoT-MouseCapture-log.txt next to the exe: what the helper saw, so a problem can be diagnosed from the file. */
+static FILE *mc_file = NULL;
+
+static void mc_flog(const char *fmt, ...) {
+    SYSTEMTIME t;
+    va_list ap;
+    if (!mc_file) return;
+    GetLocalTime(&t);
+    fprintf(mc_file, "[%02d:%02d:%02d.%03d] ", t.wHour, t.wMinute, t.wSecond, t.wMilliseconds);
+    va_start(ap, fmt);
+    vfprintf(mc_file, fmt, ap);
+    va_end(ap);
+    fputc('\n', mc_file);
+    fflush(mc_file);
+}
+
+static void mc_logfile_open(void) {
+    wchar_t p[MAX_PATH];
+    WIN32_FILE_ATTRIBUTE_DATA ad;
+    if (mc_file || !GetModuleFileNameW(NULL, p, MAX_PATH)) return;
+    wchar_t *s = wcsrchr(p, L'\\');
+    if (!s) return;
+    wcscpy(s + 1, L"OoT-MouseCapture-log.txt");
+    int big = GetFileAttributesExW(p, GetFileExInfoStandard, &ad) && ad.nFileSizeLow > 300000;   /* start over past 300 KB */
+    mc_file = _wfopen(p, big ? L"w" : L"a");
 }
 
 /* The picture inside the render area, exactly like the emulator lays it out (framebuffer_layout.cpp). */
@@ -182,7 +253,7 @@ static McPointer mc_orig;
 static void mc_restore_file(wchar_t *path) {
     wchar_t dir[MAX_PATH];
     if (!GetEnvironmentVariableW(L"LOCALAPPDATA", dir, MAX_PATH)) GetTempPathW(MAX_PATH, dir);
-    swprintf(path, MAX_PATH, L"%s\\OoT-MouseCapture-restore.txt", dir);
+    swprintf(path, MAX_PATH, L"%ls\\OoT-MouseCapture-restore.txt", dir);
 }
 
 static void mc_pointer_restore(void) {
@@ -213,7 +284,7 @@ static void mc_pointer_recover(void) {
 }
 
 static int mc_speed_for(LONG picture_width) {
-    double want = (double)picture_width / 1280.0;   /* one count = one pixel of the 1280-wide game picture */
+    double want = (double)picture_width / 1280.0 * mc_step;   /* one count = mc_step pixels of the 1280-wide picture */
     int best = 10;
     for (int s = 1; s <= 20; s++)
         if (fabs(mc_speed_mult[s] - want) < fabs(mc_speed_mult[best] - want)) best = s;
@@ -236,13 +307,17 @@ static void mc_pointer_apply(LONG picture_width) {
     }
     int noaccel[3] = {mc_orig.mouse[0], mc_orig.mouse[1], 0};
     SystemParametersInfoW(SPI_SETMOUSE, 0, noaccel, 0);   /* last argument 0: not saved to the user's settings */
-    SystemParametersInfoW(SPI_SETMOUSESPEED, 0, (PVOID)(INT_PTR)mc_speed_for(picture_width), 0);
+    int speed = mc_speed_for(picture_width);
+    SystemParametersInfoW(SPI_SETMOUSESPEED, 0, (PVOID)(INT_PTR)speed, 0);
+    mc_flog("pointer: picture %ld px wide, mouse_step %.3f: Windows pointer speed %d (%.3f screen px per count), "
+            "was %d with acceleration %d/%d/%d", (long)picture_width, mc_step, speed, mc_speed_mult[speed], mc_orig.speed,
+            mc_orig.mouse[0], mc_orig.mouse[1], mc_orig.mouse[2]);
 }
 
 /* ---- main loop ---- */
 
-#define MC_WRAP_X 512   /* game pixels; must match WRAP_X / WRAP_Y in the game patch (cave.c) */
-#define MC_WRAP_Y 384
+#define MC_WRAP_X 1024  /* game pixels; must match WRAP_X / WRAP_Y in the game patch (cave.c) */
+#define MC_WRAP_Y 576
 
 static volatile LONG mc_active = 0;
 static LONG mc_active_width = 0;
@@ -250,6 +325,7 @@ static void (*mc_log)(const wchar_t *msg) = NULL;   /* status lines; the standal
 
 static void mc_say(const wchar_t *msg) {
     if (mc_log) mc_log(msg);
+    mc_flog("%ls", msg);
 }
 
 static void mc_release(void) {
@@ -257,7 +333,7 @@ static void mc_release(void) {
     mc_active_width = 0;
 }
 
-/* Clock hand: a pointer more than half a period (512 x 384 pixels of the game picture) from the middle of picture
+/* Clock hand: a pointer more than half a period (512 x 288 pixels of the game picture) from the middle of picture
    r goes back by whole periods, so it ends within half a period of the middle, inside the picture. The game patch
    undoes jumps of exactly one period (cave.c, WRAP_X / WRAP_Y), so the camera never sees them. A pointer that got
    out of the picture comes back the same way. Returns TRUE when *p changed. */
@@ -277,12 +353,41 @@ static BOOL mc_wrap(const RECT *r, POINT *p) {
     return TRUE;
 }
 
+/* Windows 11 slows the timers of background programs (EcoQoS); the helper runs minimized, so it opts out, and it
+   waits with a high-resolution timer (about 0.5 ms) where Windows has one, else Sleep(1). */
+typedef struct { ULONG Version; ULONG ControlMask; ULONG StateMask; } McPowerThrottling;
+static HANDLE mc_hr_timer = NULL;
+
+static void mc_scheduling(void) {
+    typedef BOOL (WINAPI *SetProcInfo)(HANDLE, int, LPVOID, DWORD);
+    HMODULE k = GetModuleHandleW(L"kernel32.dll");
+    SetProcInfo spi = k ? (SetProcInfo)(void *)GetProcAddress(k, "SetProcessInformation") : NULL;
+    McPowerThrottling st = {1, 0x1 | 0x4, 0};   /* EXECUTION_SPEED | IGNORE_TIMER_RESOLUTION: both off */
+    if (spi) spi(GetCurrentProcess(), 4 /* ProcessPowerThrottling */, &st, sizeof st);
+    if (!mc_hr_timer) mc_hr_timer = CreateWaitableTimerExW(NULL, NULL, 0x2 /* HIGH_RESOLUTION */, TIMER_ALL_ACCESS);
+}
+
+static void mc_tick(void) {
+    LARGE_INTEGER due;
+    due.QuadPart = -5000;   /* 0.5 ms, relative */
+    if (mc_hr_timer && SetWaitableTimer(mc_hr_timer, &due, 0, NULL, NULL, FALSE)) {
+        WaitForSingleObject(mc_hr_timer, 5);
+        return;
+    }
+    Sleep(1);
+}
+
 /* Runs until process `pid` exits (pid 0: until `*stop` becomes non-zero). */
 static void mc_run(DWORD pid, volatile LONG *stop) {
     HANDLE proc = pid ? OpenProcess(SYNCHRONIZE, FALSE, pid) : NULL;
     if (pid && !proc) return;
+    mc_logfile_open();
     mc_dpi_aware();
     mc_load_aspect();
+    mc_load_step();
+    mc_scheduling();
+    mc_flog("---- helper started (game pid %lu): mouse_step %.3f, picture aspect %.4f, high-resolution timer %s ----",
+            (unsigned long)pid, mc_step, mc_aspect, mc_hr_timer ? "yes" : "no");
     mc_pointer_recover();
     timeBeginPeriod(1);
     /* The emulator keeps every CPU core busy. At normal priority Windows can leave this 1 ms loop asleep long
@@ -293,6 +398,14 @@ static void mc_run(DWORD pid, volatile LONG *stop) {
     HWND rect_of = NULL;
     RECT r = {0};
     BOOL have_rect = FALSE;
+    /* written to the log every 5 s while active: the slowest look and the biggest pointer move between two looks */
+    LARGE_INTEGER qf, qlast = {0}, qnow;
+    QueryPerformanceFrequency(&qf);
+    DWORD st_t0 = 0, st_wraps = 0;
+    double st_maxgap = 0;
+    LONG st_mx = 0, st_my = 0;
+    POINT lastpt = {0};
+    BOOL have_last = FALSE;
     for (;;) {
         if (proc && WaitForSingleObject(proc, 0) == WAIT_OBJECT_0) break;
         if (stop && *stop) break;
@@ -321,6 +434,7 @@ static void mc_run(DWORD pid, volatile LONG *stop) {
         POINT pt = {0};
         if (!focused || !have_rect || !GetCursorPos(&pt)) {   /* another window in front: leave the pointer alone */
             if (mc_active) mc_say(L"Paused: the game is not in front (the mouse is normal again).");
+            have_last = FALSE;
             mc_release();
             rect_of = NULL;
             Sleep(f.top ? 20 : 250);
@@ -340,12 +454,40 @@ static void mc_run(DWORD pid, volatile LONG *stop) {
             mc_active_width = width;
         }
         BOOL escaped = !PtInRect(&r, pt);
+        QueryPerformanceCounter(&qnow);
+        if (have_last) {
+            double gap = (double)(qnow.QuadPart - qlast.QuadPart) * 1000.0 / (double)qf.QuadPart;
+            LONG mx = labs(pt.x - lastpt.x), my = labs(pt.y - lastpt.y);
+            if (gap > st_maxgap) st_maxgap = gap;
+            if (mx > st_mx) st_mx = mx;
+            if (my > st_my) st_my = my;
+        } else {
+            st_t0 = now;
+        }
+        qlast = qnow;
         if (mc_wrap(&r, &pt)) {
             SetCursorPos(pt.x, pt.y);
-            if (escaped && escapes++ % 50 == 0)
-                mc_say(L"The pointer got out of the picture (very fast move or busy PC): brought it back.");
+            st_wraps++;
+            if (escaped) {
+                if (escapes < 30 || escapes % 100 == 0)
+                    mc_flog("pointer was outside the picture; brought back to (%ld,%ld)", (long)pt.x, (long)pt.y);
+                if (escapes++ % 50 == 0)
+                    mc_say(L"The pointer got out of the picture (very fast move or busy PC): brought it back.");
+            }
         }
-        Sleep(1);
+        lastpt = pt;
+        have_last = TRUE;
+        if (now - st_t0 >= 5000) {
+            if (st_wraps || st_mx > 4 || st_my > 4)
+                mc_flog("5 s: %lu jumps back, slowest look %.1f ms, biggest pointer move per look %ld x %ld screen px, "
+                        "%lu escapes in total", (unsigned long)st_wraps, st_maxgap, (long)st_mx, (long)st_my,
+                        (unsigned long)escapes);
+            st_t0 = now;
+            st_wraps = 0;
+            st_maxgap = 0;
+            st_mx = st_my = 0;
+        }
+        mc_tick();
     }
     mc_release();
     timeEndPeriod(1);

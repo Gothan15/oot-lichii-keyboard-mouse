@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.4.3 – 2026-11-12
+
+- **The Native camera is now marked EXPERIMENTAL everywhere.** Some players still get problems with it (the camera stopping or stuttering, a black screen after the game loads), so the settings program shows the option in red as *EXPERIMENTAL* with a warning box right under it, asks for confirmation before applying it, and says to go back to *As the stick* (the default) if anything goes wrong. The settings file, `Apply-Settings`, the read-me files and the docs carry the same warning.
+- **Native camera: much more room for fast turns on a busy PC.** When the emulator is busy it can update the game's mouse position only every few tens of milliseconds, and a fast turn then went past what the game patch could tell apart from the helper's own jumps, so the camera stuttered or stopped. The helper now jumps by 1024 × 576 game pixels instead of 512 × 384, and one mouse count moves the pointer half a pixel (new setting `mouse_step`, default `0.5`; `Apply-Settings` scales the patch so the camera speed does not change). Together that is about 4 times the room left/right and 3 times up/down. In a simulation, a fast turn (50 cm/s at 1600 DPI) with updates every 30 ms went from losing the turn to following the hand exactly. Lower `mouse_step` to `0.25` for even more room. (Ideas from a pull request by igormoraesraphael0403-arch.)
+- `OoT-MouseCapture.exe` writes `OoT-MouseCapture-log.txt` next to it (picture size, pointer speed, pauses, and every 5 s its slowest wake-up and the biggest pointer move), waits with a 0.5 ms timer, and opts out of Windows 11's background slow-down.
+- Update both together: the new `OoT-MouseCapture.exe` needs the new game patch and settings (`INSTALL.bat`, the settings program or `Apply-Settings.bat` do it).
+
 ## v1.4.2 – 2026-11-12
 
 - **Native camera: no more "invisible wall".** When a fast move or a busy PC carried the pointer out of the game picture before `OoT-MouseCapture.exe` caught it (mostly with Lichii in a window), the helper let go, Lichii held the game's mouse at the edge of the picture, and the camera stopped until the mouse came back. The helper now stays active until another window comes in front and brings an escaped pointer straight back; it also runs at a higher priority so the emulator cannot keep it waiting. In a simulation of a busy PC with a windowed game, the camera went from losing about 95 % of a fast turn to about 5 %.

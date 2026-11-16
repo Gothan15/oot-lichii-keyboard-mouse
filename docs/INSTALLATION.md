@@ -4,8 +4,8 @@ There are two ways to install. **Pick one**; they install the same mod and use t
 
 | Way | Download | Best for |
 |---|---|---|
-| **A. The program** | `OoT-KeyboardMouse-Config-v1.4.2.zip` | Most people: choose keys with clicks; the in-game key icons follow your keys. |
-| **B. Manual** | `OoT-KeyboardMouse-v1.4.2.zip` | People who prefer no program: a one-click installer and a text file for the keys. |
+| **A. The program** | `OoT-KeyboardMouse-Config-v1.4.3.zip` | Most people: choose keys with clicks; the in-game key icons follow your keys. |
+| **B. Manual** | `OoT-KeyboardMouse-v1.4.3.zip` | People who prefer no program: a one-click installer and a text file for the keys. |
 
 Both are on the [latest release](../../releases/latest) page, under **Assets**.
 
@@ -15,7 +15,7 @@ Both are on the [latest release](../../releases/latest) page, under **Assets**.
 
 ## A. Install with the program
 
-1. **Download** `OoT-KeyboardMouse-Config-v1.4.2.zip`.
+1. **Download** `OoT-KeyboardMouse-Config-v1.4.3.zip`.
 2. **Extract it:** right-click the zip → **Extract All…** → **Extract**. A folder opens with `OoT-KeyboardMouse-Config.exe` in it.
 3. **Close Lichii** completely (stopping the game is not enough: Lichii saves its settings when it closes and would undo the changes).
 4. Double-click **`OoT-KeyboardMouse-Config.exe`**.
@@ -25,7 +25,7 @@ Both are on the [latest release](../../releases/latest) page, under **Assets**.
    - It says *(not found)*: click **Change…** and pick it. To see where it is, open Lichii and click **File → Open Lichii Folders → Root Data Folder** (a window opens: that is the folder). For a portable Lichii, pick the folder that has `lichii.exe`.
 6. **Choose your keys** (or keep the defaults):
    - **Buttons** and **Movement** tabs: next to each action, pick a key from the list, or click **Press a key…** and press the key (or click a mouse button in that small window).
-   - **Mouse and camera** tab: camera mode (*As the stick* or *Native*), camera speed, invert up/down.
+   - **Mouse and camera** tab: camera mode (*As the stick*, the default, or *Native*, which is **experimental**: if it gives you any problem, go back to *As the stick*), camera speed, invert up/down.
    - Orange text under the tabs warns you about a key used twice or a key that clashes with Lichii.
 7. Click **Apply** and wait for **Done**.
    - Changed keys? The first time, the program needs your game file (`.nup`) to draw the new key icons. It looks for it by itself in Lichii's game folders and asks you to pick it if it cannot find it.
@@ -38,7 +38,7 @@ To change something later: close Lichii, open the program, change it, click **Ap
 
 ## B. Install manually
 
-1. **Download** `OoT-KeyboardMouse-v1.4.2.zip`.
+1. **Download** `OoT-KeyboardMouse-v1.4.3.zip`.
 2. **Extract it:** right-click the zip → **Extract All…** → **Extract**. A folder opens with `INSTALL.bat` in it.
    - Do not run anything from inside the zip window: extract first.
 3. **Close Lichii** completely.

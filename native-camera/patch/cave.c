@@ -30,8 +30,8 @@ struct State {
 };
 extern volatile struct State oot_mcam_state;   /* placed in spare game BSS by the linker script */
 
-#define WRAP_X 512   /* must match mouse_capture.h */
-#define WRAP_Y 384
+#define WRAP_X 1024  /* must match mouse_capture.h: 80% of the 1280x720 picture */
+#define WRAP_Y 576
 
 static int unwrap(int d, int period) {
     while (d > period / 2) d -= period;
@@ -73,7 +73,9 @@ int oot_mouse_delta(float *yaw, float *pitch) {
         /* The mouse helper keeps the pointer near the middle of the picture by moving it back exactly
            WRAP_X (or WRAP_Y) game pixels whenever it gets more than half of that from the middle, like a
            clock hand going from 12 to 1. Any jump of about that size is such a move: unwrap it.
-           The hand can move up to half of WRAP per sample (every ~8 ms), far beyond any real flick. */
+           The hand can move up to half of WRAP per sample (512 x 288 px) before a move is read as a jump back.
+           Samples come every ~8 ms, but a busy emulator can leave tens of ms between position updates, so the
+           helper also makes one mouse count worth only mouse_step (0.5) px. */
         dx += unwrap(s[i].delta_x, WRAP_X);
         dy += unwrap(s[i].delta_y, WRAP_Y);
     }
