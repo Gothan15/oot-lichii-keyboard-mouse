@@ -157,6 +157,11 @@ The icon files come from the game, so they are only in the release zips, not in 
 - [Build the mod and the program yourself](docs/BUILD-THE-MOD.md)
 - [Changelog](CHANGELOG.md)
 
+## Contributors
+
+- [exgde](https://github.com/exgde): the mod, the tools and the settings program.
+- [igormoraesraphael0403-arch](https://github.com/igormoraesraphael0403-arch): ideas for the Native camera in 1.4.3 (bigger clock-hand jumps, `mouse_step`, the helper log), from [pull request #4](https://github.com/exgde/oot-lichii-keyboard-mouse/pull/4).
+
 ## License
 
 Code, scripts and documentation: MIT ([LICENSE](LICENSE)). The Lichii patches are derived from Eden/yuzu and follow GPL-3.0-or-later. The icon files in the release are derived from the game and remain Nintendo's property: use them only with a copy you own. Fan project, not affiliated with Nintendo or with Lichii/Eden ([NOTICE](NOTICE.md)). Made with the help of AI (Claude).
