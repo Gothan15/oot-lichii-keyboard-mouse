@@ -5,12 +5,20 @@
 What it does
   1. Compiles cave.c + hooks.S for AArch64 and links them at a fixed address in the unused space after the
      game's code (module offset 0x3C46400; the Dynamic FPS patch uses 0x3C46200-0x3C46277).
-  2. Replaces one game instruction with a branch into that code: module 0x0625370 `str s0, [sp, #12]`
-     in the player camera update, where the right stick has just been turned into this frame's yaw and pitch.
+  2. Replaces two game instructions with branches into that code:
+       - module 0x644C80: the first instruction of the player camera update (f_80644c80, the camera in
+         x0). This is the v2 hook (Triforce's design): the mouse owns the camera's angles there.
+       - module 0x0625370 `str s0, [sp, #12]`, where the right stick has just been turned into this
+         frame's yaw and pitch. In v2 this hook no longer adds the mouse; it only notes that the
+         stick turned the camera, so the entry hook adopts the result.
   3. Writes <out>/MouseCamera-Native/exefs/<build id>.ips (IPS32: offsets are module offset + 0x100).
 
 --main is optional: when given (a decompressed main as an ELF at 0x80b75000, e.g. from nso2elf.py), the
-script checks that the replaced instruction and the cave area are what it expects before writing.
+script checks that the replaced instructions and the cave area are what it expects before writing.
+
+CAM_ENTRY_INSN below is the original first instruction at 0x644C80. Until it has been read from a real
+main and pinned (the --main run prints it), the script refuses to write a shippable .ips: with --dev it
+writes <build id>-DEV.ips instead, which no emulator will load, for size/disassembly checks only.
 """
 import argparse
 import os
@@ -25,7 +33,9 @@ CAVE = 0x3C46400                      # module offset of the code cave
 CAVE_END = 0x3C47000                  # end of the executable segment (page end)
 STATE = 0x4E9FE40                     # module offset of spare BSS for the state (Dynamic FPS uses 0x4E9FE00-0x4E9FE0F)
 GET_MOUSE_STATES = 0x3C44800          # module offset of the game's PLT stub for nn::hid::GetMouseStates
+CAM_ENTRY_INSN = None   # original instruction at 0x644C80; pin it from a --main run before shipping
 HOOKS = [  # module offset, expected original instruction, symbol
+    (0x0644C80, CAM_ENTRY_INSN, 'oot_hook_cam'),  # first instruction of f_80644c80 (player camera update)
     (0x0625370, 0xBD000FE0, 'oot_hook_rates'),   # str s0, [sp, #12]  (player camera: stick -> turn this frame)
 ]
 NSO_HEADER = 0x100
@@ -60,6 +70,8 @@ def main():
     ap.add_argument('--llvm', default=r'C:\Users\jbmid\dev\tools\llvm-22.1.8\bin')
     ap.add_argument('--main', default='')
     ap.add_argument('--out', default=os.path.join(HERE, '..'))
+    ap.add_argument('--dev', action='store_true',
+                    help='allow building while a hook instruction is unpinned; writes a -DEV .ips that no emulator loads')
     a = ap.parse_args()
     clang, lld = os.path.join(a.llvm, 'clang'), os.path.join(a.llvm, 'ld.lld')
     objcopy, nm = os.path.join(a.llvm, 'llvm-objcopy'), os.path.join(a.llvm, 'llvm-nm')
@@ -101,18 +113,25 @@ SECTIONS {{
     for off, expect, name in HOOKS:
         patches.append((off, struct.pack('<I', bl(ELF_BASE + off, sym[name]))))
 
+    unpinned = [name for _, expect, name in HOOKS if expect is None]
     if a.main:
         img = open(a.main, 'rb').read()
         def at(off, n):  # main.elf from nso2elf: file offset 0x1000 = module offset 0
             return img[0x1000 + off:0x1000 + off + n]
         for off, expect, name in HOOKS:
             got = struct.unpack('<I', at(off, 4))[0]
+            if expect is None:
+                sys.exit(f'{name}: the instruction at {off:#x} is {got:#010x}. Pin it as CAM_ENTRY_INSN '
+                         f'in this script (and redo it in hooks.S where the placeholder NOP is), then rebuild.')
             if got != expect:
                 sys.exit(f'{name}: game instruction at {off:#x} is {got:#010x}, expected {expect:#010x} (other game version?)')
         tail = at(CAVE, CAVE_END - CAVE)
         if tail.strip(b'\0'):
             sys.exit('the cave area is not empty in this main')
         print('main checked: hook instructions and cave area match')
+    if unpinned and not a.dev:
+        sys.exit('unpinned hook instruction(s): ' + ', '.join(unpinned) +
+                 '. Run once with --main to read the real instruction, or pass --dev for a check-only build.')
 
     out_dir = os.path.join(a.out, 'MouseCamera-Native', 'exefs')
     os.makedirs(out_dir, exist_ok=True)
@@ -120,7 +139,9 @@ SECTIONS {{
     for off, data in patches:
         ips += struct.pack('>IH', off + NSO_HEADER, len(data)) + data
     ips += b'EEOF'
-    path = os.path.join(out_dir, BUILD_ID + '.ips')
+    path = os.path.join(out_dir, BUILD_ID + ('-DEV' if unpinned else '') + '.ips')
+    if unpinned:
+        print('WARNING: DEV build (unpinned hook instruction); this .ips is for inspection only and must not be shipped')
     open(path, 'wb').write(ips)
     print(f'cave {len(blob)} bytes at module {CAVE:#x}; hooks: ' +
           ', '.join(f'{n} {sym[n]:#x}' for _, _, n in HOOKS))

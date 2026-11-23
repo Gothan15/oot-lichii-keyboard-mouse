@@ -1,6 +1,11 @@
 /* Test of cave.c on the PC (no game needed): a fake nn::hid::GetMouseStates feeds mouse samples, including the
    mouse helper's clock-hand moves, and checks the camera turn per frame.
      clang -O1 -target x86_64-pc-windows-msvc -fuse-ld=lld test_cave.c cave.c -o test_cave.exe && test_cave.exe
+
+   NOTA (fork, v2): esta prueba es de la v1, cuando oot_cam_rates sumaba el ratón en el punto del
+   stick. En la v2 ese gancho solo anota los giros del stick y la cámara se mueve desde su entrada
+   (oot_cam_native); el lector de movimiento (oot_mouse_delta) no cambió y su comportamiento se
+   ejercita ahora a través de test_cam.c. Esta prueba queda como referencia histórica de la v1.
 */
 #include <stdio.h>
 #include <stdlib.h>

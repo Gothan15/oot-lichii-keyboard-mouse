@@ -74,6 +74,7 @@
 
     .text
     .global oot_hook_rates
+    .global oot_hook_cam
 
 // Replaces `str s0, [sp, #12]` at module 0x625370, in the player camera update. There s9 holds this frame's
 // yaw change and s0 the pitch change (degrees) computed from the right stick, and s1 = s9*s9 was just computed.
@@ -86,4 +87,21 @@ oot_hook_rates:
     RESTORE_ALL 0
     fmul    s1, s9, s9
     str     s0, [sp, #12]
+    ret
+
+// Replaces the FIRST instruction of the player camera update (f_80644c80, module 0x644C80), where x0 is
+// the camera object. The C code runs before the game reads its input for this frame, exactly where
+// Triforce's builder inserts its call in the lifted source. After restoring everything, the replaced
+// instruction is redone and execution continues at the second instruction of the function.
+//
+// !!! PLACEHOLDER: the redone instruction below is a NOP until the real first instruction at module
+// 0x644C80 is read from a decompressed main and pinned here (build_native_camera_ips.py refuses to
+// produce a shippable .ips while it is a placeholder; see CAM_ENTRY_INSN there). A wrong redo here
+// would run the function without its prologue, so this must be filled in before any real use.
+oot_hook_cam:
+    SAVE_ALL
+    ldr     x0, [sp, #0]             // saved x0: the camera object
+    bl      oot_cam_native
+    RESTORE_ALL 0
+    nop                              // <-- replaced instruction goes here once verified
     ret
