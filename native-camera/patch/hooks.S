@@ -94,14 +94,13 @@ oot_hook_rates:
 // Triforce's builder inserts its call in the lifted source. After restoring everything, the replaced
 // instruction is redone and execution continues at the second instruction of the function.
 //
-// !!! PLACEHOLDER: the redone instruction below is a NOP until the real first instruction at module
-// 0x644C80 is read from a decompressed main and pinned here (build_native_camera_ips.py refuses to
-// produce a shippable .ips while it is a placeholder; see CAM_ENTRY_INSN there). A wrong redo here
-// would run the function without its prologue, so this must be filled in before any real use.
+// The redone instruction is the real first instruction at module 0x644C80, read from Gothan's
+// decompressed main (build E0F3CCFA...) on 2026-11-23 and pinned as CAM_ENTRY_INSN in
+// build_native_camera_ips.py, which verifies it against the main on every --main build.
 oot_hook_cam:
     SAVE_ALL
     ldr     x0, [sp, #0]             // saved x0: the camera object
     bl      oot_cam_native
     RESTORE_ALL 0
-    nop                              // <-- replaced instruction goes here once verified
+    mov     x3, xzr                  // 0xAA1F03E3: the replaced first instruction of f_80644c80
     ret

@@ -33,7 +33,7 @@ CAVE = 0x3C46400                      # module offset of the code cave
 CAVE_END = 0x3C47000                  # end of the executable segment (page end)
 STATE = 0x4E9FE40                     # module offset of spare BSS for the state (Dynamic FPS uses 0x4E9FE00-0x4E9FE0F)
 GET_MOUSE_STATES = 0x3C44800          # module offset of the game's PLT stub for nn::hid::GetMouseStates
-CAM_ENTRY_INSN = None   # original instruction at 0x644C80; pin it from a --main run before shipping
+CAM_ENTRY_INSN = 0xAA1F03E3   # mov x3, xzr: read from Gothan's decompressed main (build E0F3CCFA...) on 2026-11-23
 HOOKS = [  # module offset, expected original instruction, symbol
     (0x0644C80, CAM_ENTRY_INSN, 'oot_hook_cam'),  # first instruction of f_80644c80 (player camera update)
     (0x0625370, 0xBD000FE0, 'oot_hook_rates'),   # str s0, [sp, #12]  (player camera: stick -> turn this frame)
