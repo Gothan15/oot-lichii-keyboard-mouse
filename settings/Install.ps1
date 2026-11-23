@@ -48,7 +48,7 @@ foreach ($m in $mustHave) {
 }
 
 # ---------------------------------------------------------------- Lichii must be closed
-$running = @(Get-Process | Where-Object { $_.ProcessName -match '^(lichii|eden|yuzu|citron|sudachi|suyu|torzu)' })
+$running = @(Get-Process | Where-Object { $_.ProcessName -match '^(lichii|fritchii|eden|yuzu|citron|sudachi|suyu|torzu)' })
 if ($running.Count -gt 0 -and -not $Force) {
     Stop-Install @("Lichii is open ($($running[0].ProcessName).exe). Close it completely, then run INSTALL.bat again.",
         '(Lichii saves its settings when it closes, which would undo the installation.)')

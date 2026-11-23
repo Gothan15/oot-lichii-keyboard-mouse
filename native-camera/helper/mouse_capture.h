@@ -112,7 +112,8 @@ static int mc_try_folder(const wchar_t *dir, int *value) {
     return mc_read_aspect_setting(p, value);
 }
 
-/* OoT-MouseCapture.exe sits in Lichii's data folder (the installers put it there); else portable user\ or %APPDATA%\lichii */
+/* OoT-MouseCapture.exe sits in the emulator's data folder (the installers put it there); else portable user\,
+   or %APPDATA%\lichii / %APPDATA%\fritchii */
 static void mc_load_aspect(void) {
     wchar_t dir[MAX_PATH], tmp[MAX_PATH];
     int v = 0, ok = 0;
@@ -126,6 +127,7 @@ static void mc_load_aspect(void) {
     if (!ok && GetEnvironmentVariableW(L"APPDATA", dir, MAX_PATH)) {
         swprintf(tmp, MAX_PATH, L"%ls\\lichii", dir);
         ok = mc_try_folder(tmp, &v);
+        if (!ok) { swprintf(tmp, MAX_PATH, L"%ls\\fritchii", dir); ok = mc_try_folder(tmp, &v); }
     }
     static const double aspects[] = {9.0 / 16.0, 3.0 / 4.0, 9.0 / 21.0, 10.0 / 16.0, 0.0};
     mc_aspect = (ok && v >= 0 && v <= 4) ? aspects[v] : 9.0 / 16.0;
@@ -170,6 +172,8 @@ static void mc_load_step(void) {
     }
     if (GetEnvironmentVariableW(L"APPDATA", dir, MAX_PATH)) {
         swprintf(tmp, MAX_PATH, L"%ls\\lichii", dir);
+        if (mc_read_step(tmp)) return;
+        swprintf(tmp, MAX_PATH, L"%ls\\fritchii", dir);
         mc_read_step(tmp);
     }
 }

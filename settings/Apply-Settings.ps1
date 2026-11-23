@@ -290,7 +290,7 @@ $profilePath = Join-Path $Root ('config\input\' + $profileName + '.ini')
 $utf8 = New-Object System.Text.UTF8Encoding($false)
 
 # ---------------------------------------------------------------- is Lichii running?
-$running = @(Get-Process | Where-Object { $_.ProcessName -match '^(lichii|eden|yuzu|citron|sudachi|suyu|torzu)' })
+$running = @(Get-Process | Where-Object { $_.ProcessName -match '^(lichii|fritchii|eden|yuzu|citron|sudachi|suyu|torzu)' })
 if ($running.Count -gt 0 -and -not $DryRun -and -not $Force) {
     Fail @("Lichii is running ($($running[0].ProcessName).exe). Close it first: it would overwrite these settings when it exits.")
 }
