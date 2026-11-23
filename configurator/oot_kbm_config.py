@@ -45,14 +45,14 @@ DEFAULTS = {
     'button_home': 'none', 'button_screenshot': 'none', 'move_up': 'w', 'move_down': 's', 'move_left': 'a',
     'move_right': 'd', 'walk_key': 'z', 'walk_speed': '0.5', 'mouse_sens': '5.0', 'mouse_sens_x': '', 'mouse_sens_y': '',
     'mouse_invert_y': 'false', 'mouse_camera': 'stick', 'mouse_deadzone_boost': '20', 'mouse_stop_speed': '18',
-    'mouse_min_decay': '6', 'hide_cursor': 'true', 'mouse_step': '0.5',
+    'mouse_min_decay': '6', 'hide_cursor': 'true', 'mouse_step': '0.5', 'icon_style': 'game',
 }
 EXPERIMENTAL_NOTE = ('WARNING: the Native camera is EXPERIMENTAL and may have bugs: the camera can stop or '
                      'stutter, and on some PCs the screen stays black after the game loads. If you have any problem, '
                      'choose "As the stick" (the default), click Apply and play with that.')
 ICON_KEYS = ['button_a', 'button_b', 'button_x', 'button_y', 'button_l', 'button_r', 'button_zl', 'button_zr',
              'button_r3', 'button_plus', 'button_minus', 'dpad_up', 'dpad_left', 'dpad_right', 'dpad_down',
-             'move_up', 'move_down', 'move_left', 'move_right']
+             'move_up', 'move_down', 'move_left', 'move_right', 'icon_style']
 KEY_NAMES = (['mouse_left', 'mouse_right', 'mouse_middle', 'mouse_back', 'mouse_forward', 'space', 'shift', 'enter',
               'tab', 'backspace', 'capslock', 'up', 'down', 'left', 'right', 'insert', 'delete', 'home', 'end',
               'pageup', 'pagedown', 'ctrl', 'alt', 'esc'] + [chr(c) for c in range(ord('a'), ord('z') + 1)]
@@ -501,6 +501,13 @@ class App:
         self.scale(feel, 'mouse_stop_speed', 0, 100, 1, 'How fast it stops')
         self.scale(feel, 'mouse_min_decay', 0, 100, 2, 'Minimum slow-down')
         self.feel = feel
+        self.vars['icon_style'] = tk.StringVar(value='game')
+        icons_frame = ttk.LabelFrame(f, text='Button icons (ocarina / song sheet)', padding=8)
+        icons_frame.grid(row=8, column=0, columnspan=3, sticky='ew', pady=(10, 0))
+        ttk.Radiobutton(icons_frame, text='Game buttons (default): the game\'s own round buttons with the key drawn inside',
+                        variable=self.vars['icon_style'], value='game', command=self.check).pack(anchor='w')
+        ttk.Radiobutton(icons_frame, text='Key caps (Triforce style): a dark rounded key cap with the key cut out of it',
+                        variable=self.vars['icon_style'], value='keycap', command=self.check).pack(anchor='w')
         f.columnconfigure(0, weight=1)
         return f
 

@@ -101,10 +101,18 @@ propuesta comunitaria (PR #4): arranque automático esperando al juego, temporiz
 `mouse_step` menor para dar más aire a los giros rápidos, ocultar el cursor mientras controla.
 El techo físico (posición cada ~8 ms) no desaparece: se mitiga, no se elimina.
 
-### Iconos estilo Triforce — fase siguiente
-Triforce dibuja sus avisos por código (host/prompts.c): teclas con la etiqueta dentro, limpias.
-Para el emulador hay que convertir ese estilo en **texturas** RomFS que sustituyan a las del mod
-actual (derivadas de los gráficos del juego). Trabajo gráfico aparte, sin tocar la cámara.
+### Iconos estilo Triforce — hecho (botones de la ocarina)
+La definición de Triforce (nx2/prompt_keys.py): una tecla es «un cuadrado redondeado (más ancho
+para una palabra) con su etiqueta recortada en Libertinus Sans Bold». En este mod los iconos no se
+envían como texturas: se **generan al aplicar los ajustes** desde los archivos del propio juego.
+El estilo se aplicó donde el mod posee el gráfico entero, las texturas `OcarinaButton*` (93×93,
+las notas de la ocarina y la partitura): la silueta redonda del juego se sustituye por la tapa
+redondeada oscura ocupando la misma caja (el anclaje del layout no se mueve) y la etiqueta se
+recorta en claro. Elección en el configurador («Button icons (ocarina / song sheet)»: Game buttons
+/ Key caps), ajuste `icon_style` en el ini; la herramienta suelta lo toma de `OOT_ICON_STYLE`.
+Los botones del HUD (`KeyTexFont*`) no se tocaron: ahí la forma la pone el layout del juego y la
+textura es solo el símbolo — meter una tapa dentro dibujaría dos veces. La fuente de iconos del
+Drawer (avisos en menús) queda como paso siguiente si el aspecto convence en la partitura.
 
 ### Fritchii
 - El parche es del juego, no del emulador: vale para Lichii y Fritchii igual (mismo build

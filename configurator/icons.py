@@ -338,6 +338,7 @@ def build(keys, work, base_mod_dir, out_mod_dir, log=print):
         cs, sign, fw, fh = d.symbol(syms[k])
         m = _ink(BF, cs, sign, 64, 32, 32, 64 * fw * 1.15, 64 * fh * 1.15)
         C.write_bc4(b, t['KeyTexFont%s_00' % k], np.clip(m * 255 + 0.5, 0, 255).astype(np.uint8))
+    keycap = str(keys.get('icon_style', 'game')).strip().lower() == 'keycap'
     for k in 'ABXYLR':
         orig = C.read_astc(base, t['OcarinaButton%s_00' % k])         # the mod keeps the game's silhouette (alpha)
         a = np.array(orig.convert('RGBA'))
@@ -348,8 +349,26 @@ def build(keys, work, base_mod_dir, out_mod_dir, log=print):
         cs, sign, fw, fh = d.symbol(syms[k])
         m = _ink(BF, cs, sign, 93, cx, cy, w * fw * 1.2, h * fh * 1.2)
         out = np.empty_like(a)
-        out[..., :3] = np.clip(255 * (1 - m), 0, 255).astype(np.uint8)[..., None]
-        out[..., 3] = alpha
+        if keycap:
+            # Triforce style (nx2/prompt_keys.py): the button becomes a key cap - a dark rounded square
+            # in place of the game's silhouette, with the key's label cut out of it in light. The cap
+            # takes the silhouette's own box, so the layout's anchoring does not move.
+            from PIL import ImageDraw
+            ss = 8
+            big = Image.new('L', (93 * ss, 93 * ss), 0)
+            bd = ImageDraw.Draw(big)
+            rad = int(0.22 * min(w, h) * ss)
+            bd.rounded_rectangle((xs.min() * ss, ys.min() * ss, (xs.max() + 1) * ss, (ys.max() + 1) * ss),
+                                 radius=rad, fill=255)
+            cap = np.asarray(big.resize((93, 93), Image.BOX)).astype(np.float32) / 255
+            v = np.clip(235 * m + 28 * (1 - m), 0, 255).astype(np.uint8)   # label light on the dark cap
+            out[..., 0] = v
+            out[..., 1] = v
+            out[..., 2] = v
+            out[..., 3] = np.clip(cap * 255 + 0.5, 0, 255).astype(np.uint8)
+        else:
+            out[..., :3] = np.clip(255 * (1 - m), 0, 255).astype(np.uint8)[..., None]
+            out[..., 3] = alpha
         C.write_astc(b, t['OcarinaButton%s_00' % k], Image.fromarray(out))
     log('Packing the textures...')
     bntx_bytes = zs.compress(bytes(b), 'zs.zsdic', level=9)

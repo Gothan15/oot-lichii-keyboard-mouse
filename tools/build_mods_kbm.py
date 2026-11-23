@@ -73,6 +73,24 @@ def ocarina_tex(orig, k):             # 93x93 ASTC, black symbol on the white sh
     return Image.fromarray(out)
 
 
+def keycap_tex(orig, k):              # 93x93 ASTC, Triforce style: a dark rounded key cap, the label cut out in light
+    cs, sign, fw, fh = symbols()[k]
+    a = np.array(orig.convert("RGBA")); alpha = a[..., 3]
+    ys, xs = np.where(alpha >= 128); cx, cy = (xs.min() + xs.max() + 1) / 2, (ys.min() + ys.max() + 1) / 2
+    w, h = xs.max() + 1 - xs.min(), ys.max() + 1 - ys.min()
+    m = ink(cs, sign, 93, cx, cy, w * fw * 1.2, h * fh * 1.2)
+    ss = 8
+    big = Image.new("L", (93 * ss, 93 * ss), 0); bd = ImageDraw.Draw(big)
+    bd.rounded_rectangle((xs.min() * ss, ys.min() * ss, (xs.max() + 1) * ss, (ys.max() + 1) * ss),
+                         radius=int(0.22 * min(w, h) * ss), fill=255)
+    cap = np.asarray(big.resize((93, 93), Image.BOX)).astype(np.float32) / 255
+    out = np.empty_like(a)
+    v = np.clip(235 * m + 28 * (1 - m), 0, 255).astype(np.uint8)
+    out[..., 0] = v; out[..., 1] = v; out[..., 2] = v
+    out[..., 3] = np.clip(cap * 255 + 0.5, 0, 255).astype(np.uint8)
+    return Image.fromarray(out)
+
+
 def main():
     out_root = sys.argv[1]; root = os.path.join(out_root, "ButtonPrompts-KeyboardMouse")
     fin, size, blank = K.build_fitting(OUT)
@@ -84,8 +102,9 @@ def main():
     orig_bntx, otex = C.load_bntx(); b = bytearray(orig_bntx); t = C.all_brti(bytes(b))
     for k in "ABXY": C.write_bc4(b, t[f"KeyTexFont{k}_00"], key_tex(k))
     oc = {}
+    keycap = os.environ.get("OOT_ICON_STYLE", "game") == "keycap"   # Triforce-style key caps instead of game buttons
     for k in "ABXYLR":
-        oc[k] = ocarina_tex(C.read_astc(orig_bntx, otex[f"OcarinaButton{k}_00"]), k)
+        oc[k] = (keycap_tex if keycap else ocarina_tex)(C.read_astc(orig_bntx, otex[f"OcarinaButton{k}_00"]), k)
         C.write_astc(b, t[f"OcarinaButton{k}_00"], oc[k])
     pic, light = MK.build_picture(True), MK.build_picture(False)
     sheets, _ = MK.build_sheets()
